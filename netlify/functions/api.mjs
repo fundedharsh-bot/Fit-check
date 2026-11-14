@@ -51,9 +51,7 @@ export default async (req) => {
       return new Response(r.data, {
         headers: { "content-type": r.metadata?.type || "image/jpeg", "cache-control": "public, max-age=31536000, immutable" },
       });
-    }
-
-    // ---- settings (COD on/off, UPI details) ----
+    }    // ---- settings (COD on/off, UPI details) ----
     if (path === "settings" && M === "GET") return json(await getSettings());
     if (path === "settings" && M === "PUT") {
       if (!authed()) return deny();
@@ -107,4 +105,30 @@ export default async (req) => {
       if (!authed()) return deny();
       const b = await req.json();
       if (!/^[\w-]+$/.test(String(b.id))) return json({ error: "Bad id" }, 400);
-      const o = await store.get("order-" + b.id, { type: "js
+      const o = await store.get("order-" + b.id, { type: "json" });
+      if (!o) return json({ error: "Order not found" }, 404);
+      if (["pending", "paid", "cancelled"].includes(b.status)) o.status = b.status;
+      if (b.paidAmount !== undefined) {
+        const n = Number(b.paidAmount);
+        if (!(n >= 0 && n <= 10000000)) return json({ error: "Bad amount" }, 400);
+        o.paidAmount = n;
+      }
+      o.paidAt = o.status === "paid" ? new Date().toISOString() : null;
+      await store.setJSON("order-" + o.id, o);
+      return json(o);
+    }
+    if (path === "orders" && M === "DELETE") {
+      if (!authed()) return deny();
+      const id = url.searchParams.get("id") || "";
+      if (!/^[\w-]+$/.test(id)) return json({ error: "Bad id" }, 400);
+      await store.delete("order-" + id);
+      return json({ ok: true });
+    }
+
+    return json({ error: "Not found" }, 404);
+  } catch (e) {
+    return json({ error: "Server error" }, 500);
+  }
+};
+
+export const config = { path: "/api/*" };
