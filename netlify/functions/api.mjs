@@ -7,7 +7,7 @@ const clip = (v, n) => String(v ?? "").slice(0, n);
 export default async (req) => {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/?/, "");
-  const store = getStore("fitcheck");
+  const store = getStore({ name: "fitcheck", consistency: "strong" });
   const json = (d, s = 200) =>
     new Response(JSON.stringify(d), {
       status: s,
@@ -51,14 +51,15 @@ export default async (req) => {
       return new Response(r.data, {
         headers: { "content-type": r.metadata?.type || "image/jpeg", "cache-control": "public, max-age=31536000, immutable" },
       });
-    }    // ---- settings (COD on/off, UPI details) ----
+    }
+
+    // ---- settings (COD on/off, UPI details) ----
     if (path === "settings" && M === "GET") return json(await getSettings());
     if (path === "settings" && M === "PUT") {
       if (!authed()) return deny();
       const b = await req.json();
       const next = {
-        codEnabled: !!b.codEnabled,
-        upiId: clip(b.upiId, 80).trim(),
+        codEnabled: !!b.codEnabled,        upiId: clip(b.upiId, 80).trim(),
         upiName: clip(b.upiName, 60).trim(),
       };
       if (!/^[\w.\-]{2,}@[A-Za-z]{2,}$/.test(next.upiId)) return json({ error: "Enter a valid UPI ID" }, 400);
@@ -76,6 +77,11 @@ export default async (req) => {
       const method = b.method === "cod" ? "cod" : "upi";
       const items = Array.isArray(b.items) ? b.items.slice(0, 30) : [];
       if (!name || !phone || !address || !items.length) return json({ error: "Missing order details" }, 400);
+      const utr = String(b.utr ?? "").replace(/\D/g, "");
+      if (method === "upi") {
+        if (!/^\d{12}$/.test(utr)) return json({ error: "Enter the 12-digit UPI reference number (UTR) from your payment receipt" }, 400);
+        if (await store.get("utr-" + utr)) return json({ error: "This UPI reference number was already used for another order" }, 400);
+      }
       if (method === "cod" && !(await getSettings()).codEnabled)
         return json({ error: "Cash on Delivery is not available right now" }, 400);
       const prods = (await store.get("products", { type: "json" })) || [];
@@ -91,8 +97,9 @@ export default async (req) => {
       const id = "FC" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2, 4).toUpperCase();
       await store.setJSON("order-" + id, {
         id, createdAt: new Date().toISOString(), name, phone, address, note, method,
-        items: lines, total, status: "pending", paidAmount: 0,
+        items: lines, total, status: "pending", paidAmount: 0, utr: method === "upi" ? utr : "",
       });
+      if (method === "upi") await store.set("utr-" + utr, id);
       return json({ ok: true, id, total });
     }
     if (path === "orders" && M === "GET") {
@@ -121,6 +128,8 @@ export default async (req) => {
       if (!authed()) return deny();
       const id = url.searchParams.get("id") || "";
       if (!/^[\w-]+$/.test(id)) return json({ error: "Bad id" }, 400);
+      const old = await store.get("order-" + id, { type: "json" });
+      if (old && old.utr) await store.delete("utr-" + old.utr);
       await store.delete("order-" + id);
       return json({ ok: true });
     }
