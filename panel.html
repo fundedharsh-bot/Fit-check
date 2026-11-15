@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>FitCheck Studio – Admin</title>
+<style>
+:root{--bg:#0e0e10;--panel:#17171a;--line:#2a2a30;--text:#f2f0ec;--mute:#8d8d96;--acc:#8b3dff;--bad:#ff6b6b;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f4f3f0;--panel:#fff;--line:#dcdad4;--text:#161618;--mute:#6b6b73;--acc:#6d28d9;--bad:#d93a3a;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 14px}
+button:disabled{opacity:.5;cursor:wait}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button.del{color:var(--bad)}
+.hide{display:none!important}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;max-width:360px}
+.box h1{margin:0 0 4px;font-size:22px}
+.mute{color:var(--mute)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+header h1{margin:0;font-size:18px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+main{max-width:1100px;margin:0 auto;padding:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tools input{flex:2;min-width:160px}.tools select{flex:1;min-width:130px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{aspect-ratio:4/5;background:var(--bg) center/cover no-repeat;display:grid;place-items:center;color:var(--mute);position:relative}
+.tag{position:absolute;top:8px;left:8px;background:#000c;color:#fff;font-size:12px;padding:3px 8px;border-radius:99px}
+.tag.out{background:var(--bad)}
+.info{padding:12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.info .n{font-weight:600}
+.acts{display:flex;gap:6px;padding:0 12px 12px}.acts button{flex:1;padding:7px}
+.empty{grid-column:1/-1;text-align:center;padding:50px 10px;border:1px dashed var(--line);border-radius:12px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(520px,94vw)}
+dialog::backdrop{background:#000a}
+dialog h2{margin:0 0 14px;font-size:18px}
+label{display:block;margin:10px 0 4px;font-size:13px;color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sizes{display:flex;flex-wrap:wrap;gap:6px}
+.sizes label{margin:0;display:flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);cursor:pointer}
+.sizes input{width:auto}
+.preview{width:90px;height:112px;border-radius:8px;background:var(--bg) center/cover;border:1px solid var(--line)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;z-index:20}
+.tabs{display:flex;gap:6px;padding:12px 20px 0;max-width:1100px;margin:0 auto;flex-wrap:wrap}.tabs button{border-radius:99px}.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}.chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}.chip.paid{color:#3ecf8e;border-color:#3ecf8e}.chip.pending{color:#f5b942;border-color:#f5b942}.chip.cancelled{color:var(--bad);border-color:var(--bad)}.ord{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}.ord .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}.ord .items{margin:8px 0;color:var(--mute);font-size:14px}.ord .acts{padding:10px 0 0;flex-wrap:wrap}.ord .acts button{flex:none}.ord a{color:var(--acc)}.set{max-width:520px}.set .sw{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;color:var(--text)}.set .sw input{width:auto}</style>
+</head>
+<body>
+
+<section id="login">
+  <form class="box" id="loginForm">
+    <h1>FitCheck Studio</h1>
+    <p class="mute" style="margin:0 0 16px">Sign in to manage your live shop.</p>
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password" autofocus>
+    <p id="err" class="hide" style="color:var(--bad);margin:8px 0 0"></p>
+    <button class="pri" style="width:100%;margin-top:14px">Sign in</button>
+  </form>
+</section>
+
+<section id="app" class="hide">
+  <header>
+    <h1>FitCheck Studio · Admin</h1>
+    <div class="row">
+      <button id="addBtn" class="pri">Add product</button>
+      <a href="/" target="_blank" rel="noopener"><button type="button">View live site</button></a>
+      <button id="backupBtn">Backup</button>
+      <button id="logout">Sign out</button>
+    </div>
+  </header>
+  <div class="tabs"><button id="tProducts" class="on" onclick="tab('Products')">Products</button><button id="tOrders" onclick="tab('Orders')">Orders</button><button id="tSettings" onclick="tab('Settings')">Payment settings</button></div>
+  <main id="vProducts">
+    <div class="stats">
+      <div class="stat"><span class="mute">Products</span><b id="sAll">0</b></div>
+      <div class="stat"><span class="mute">In stock</span><b id="sIn">0</b></div>
+      <div class="stat"><span class="mute">Sold out</span><b id="sOut">0</b></div>
+    </div>
+    <div class="tools">
+      <input id="q" type="search" placeholder="Search products">
+      <select id="fc"></select>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+  <main id="vOrders" class="hide">
+    <div class="stats">
+      <div class="stat"><span class="mute">Payment received</span><b id="oGot">₹0</b></div>
+      <div class="stat"><span class="mute">Payment pending</span><b id="oPend">₹0</b></div>
+      <div class="stat"><span class="mute">Orders</span><b id="oCount">0</b></div>
+    </div>
+    <div class="tools"><select id="oFilter" onchange="oFilter=this.value;renderOrders()"><option value="all">All orders</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select><button onclick="loadOrders()">Refresh</button></div>
+    <div id="oList"></div>
+  </main>
+  <main id="vSettings" class="hide"><div class="set">
+    <label class="sw"><input type="checkbox" id="sCod"> Cash on Delivery available</label>
+    <label for="sUpi">UPI ID</label><input id="sUpi" placeholder="name@bank">
+    <label for="sName">Payee name</label><input id="sName">
+    <button class="pri" style="margin-top:16px" onclick="saveSettings()">Save settings</button>
+    <p class="mute" style="font-size:13px">When Cash on Delivery is off, customers see it as “Not available”. Changes go live on the site right away.</p>
+  </div></main>
+</section>
+
+<dialog id="dlg">
+  <form id="pf" method="dialog">
+    <h2 id="dt">Add product</h2>
+    <label for="name">Name</label>
+    <input id="name" required maxlength="80">
+    <div class="two">
+      <div><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="1" required></div>
+      <div><label for="cat">Category</label><select id="cat"></select></div>
+    </div>
+    <label>Sizes available</label>
+    <div class="sizes" id="sizes"></div>
+    <label for="desc">Description (optional)</label>
+    <textarea id="desc" rows="2" maxlength="300"></textarea>
+    <label>Photo</label>
+    <div class="row" style="align-items:center">
+      <div class="preview" id="prev"></div>
+      <div style="flex:1;min-width:180px">
+        <input type="file" id="file" accept="image/*">
+        <p class="mute" id="upmsg" style="margin:6px 0 0;font-size:13px"></p>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;color:var(--text);margin-top:14px"><input type="checkbox" id="soldout" style="width:auto"> Mark as sold out</label>
+    <div class="row" style="justify-content:flex-end;margin-top:18px">
+      <button type="button" id="cancel">Cancel</button>
+      <button class="pri" id="save" type="submit">Save and publish</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const CATS = ["Streetwear","Baggy Fit","Straight Fit","Formal"];
+const SIZES = ["XS","S","M","L","XL","XXL","Free"];
+const AUTH = "fcs_admin_pw";
+const $ = id => document.getElementById(id);
+let products = [], editing = null, image = "", pw = "", uploading = false;
+
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(m){ const t=document.createElement("div"); t.className="toast"; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+async function api(path, opts = {}){
+  const r = await fetch("/api/"+path, {cache:"no-store", ...opts, headers:{"x-admin-password":pw, ...(opts.headers||{})}});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error || "Request failed");
+  return d;
+}
+async function publish(){
+  await api("products",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(products)});
+}
+async function reload(){ products = await api("products"); render(); }
+
+async function start(password){
+  pw = password;
+  await api("login",{method:"POST"});
+  try{ sessionStorage.setItem(AUTH,pw); }catch(e){}
+  $("login").classList.add("hide"); $("app").classList.remove("hide");
+  await reload();
+  loadOrders();
+  loadSettings();
+}
+$("loginForm").onsubmit = async e => {
+  e.preventDefault();
+  try{ await start($("pw").value); }
+  catch(err){ $("err").textContent = err.message==="Wrong password" ? "Wrong password. Try again." : "Couldn't reach the server. Check that the site is deployed with functions and ADMIN_PASSWORD is set."; $("err").classList.remove("hide"); }
+};
+try{ const s=sessionStorage.getItem(AUTH); if(s) start(s).catch(()=>{}); }catch(e){}
+$("logout").onclick = () => { try{ sessionStorage.removeItem(AUTH); }catch(e){} location.reload(); };
+
+$("fc").innerHTML = ['<option value="">All categories</option>'].concat(CATS.map(c=>`<option>${c}</option>`)).join("");
+$("cat").innerHTML = CATS.map(c=>`<option>${c}</option>`).join("");
+$("sizes").innerHTML = SIZES.map(s=>`<label><input type="checkbox" value="${s}">${s}</label>`).join("");
+$("q").oninput = $("fc").onchange = render;
+
+function render(){
+  const q = $("q").value.trim().toLowerCase(), fc = $("fc").value;
+  const list = products.filter(p => (!fc || p.category===fc) && (!q || p.name.toLowerCase().includes(q)));
+  $("sAll").textContent = products.length;
+  $("sOut").textContent = products.filter(p=>p.soldOut).length;
+  $("sIn").textContent = products.filter(p=>!p.soldOut).length;
+  if(!list.length){
+    $("grid").innerHTML = `<div class="empty"><p style="margin:0 0 10px">${products.length?"No products match your search.":"No products yet. Add your first piece to get started."}</p>${products.length?"":'<button class="pri" onclick="openForm()">Add product</button>'}</div>`;
+    return;
+  }
+  $("grid").innerHTML = list.map(p => `
+    <div class="card">
+      <div class="thumb" style="${p.image?`background-image:url('${esc(p.image)}')`:""}">${p.image?"":"No photo"}<span class="tag ${p.soldOut?"out":""}">${p.soldOut?"Sold out":esc(p.category)}</span></div>
+      <div class="info"><span class="n">${esc(p.name)}</span><span>₹${Number(p.price).toLocaleString("en-IN")}</span><span class="mute">${p.sizes.length?esc(p.sizes.join(", ")):"No sizes set"}</span></div>
+      <div class="acts">
+        <button onclick="openForm('${p.id}')">Edit</button>
+        <button onclick="toggleStock('${p.id}')">${p.soldOut?"Restock":"Sold out"}</button>
+        <button class="del" onclick="removeP('${p.id}')">Delete</button>
+      </div>
+    </div>`).join("");
+}
+
+function setPreview(src){ image = src||""; $("prev").style.backgroundImage = image?`url("${image}")`:"none"; }
+function openForm(id){
+  editing = id || null;
+  const p = products.find(x=>x.id===id) || {name:"",price:"",category:CATS[0],sizes:[],description:"",image:"",soldOut:false};
+  $("dt").textContent = id ? "Edit product" : "Add product";
+  $("name").value=p.name; $("price").value=p.price; $("cat").value=p.category; $("desc").value=p.description||"";
+  $("soldout").checked=!!p.soldOut; $("file").value=""; $("upmsg").textContent="";
+  document.querySelectorAll("#sizes input").forEach(c=>c.checked=p.sizes.includes(c.value));
+  setPreview(p.image); $("dlg").showModal();
+}
+$("addBtn").onclick = () => openForm();
+$("cancel").onclick = () => $("dlg").close();
+
+$("file").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const s = Math.min(1, 1000/Math.max(img.width,img.height)), c = document.createElement("canvas");
+    c.width = img.width*s; c.height = img.height*s;
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);
+    c.toBlob(async blob => {
+      uploading = true; $("save").disabled = true; $("upmsg").textContent = "Uploading photo…";
+      try{
+        const d = await api("image",{method:"POST",headers:{"content-type":"image/jpeg"},body:blob});
+        setPreview(d.url); $("upmsg").textContent = "Photo ready.";
+      }catch(err){ $("upmsg").textContent = "Upload failed: "+err.message; }
+      uploading = false; $("save").disabled = false;
+    },"image/jpeg",.85);
+  };
+  img.onerror = () => { $("upmsg").textContent = "Couldn't read that image."; };
+  img.src = url;
+};
+
+$("pf").onsubmit = async e => {
+  e.preventDefault();
+  if(uploading) return;
+  const before = products;
+  const data = {
+    name:$("name").value.trim(), price:Number($("price").value), category:$("cat").value,
+    sizes:[...document.querySelectorAll("#sizes input:checked")].map(c=>c.value),
+    description:$("desc").value.trim(), image, soldOut:$("soldout").checked
+  };
+  products = editing ? products.map(p=>p.id===editing?{...p,...data}:p) : [{id:"p"+Date.now().toString(36),...data}, ...products];
+  $("save").disabled = true;
+  try{ await publish(); render(); $("dlg").close(); toast("Live on your site ✓"); }
+  catch(err){ products = before; toast("Couldn't publish: "+err.message); }
+  $("save").disabled = false;
+};
+async function mutate(fn, okMsg){
+  const before = products; products = fn(products); render();
+  try{ await publish(); toast(okMsg); }
+  catch(err){ products = before; render(); toast("Couldn't publish: "+err.message); }
+}
+function toggleStock(id){ mutate(ps=>ps.map(p=>p.id===id?{...p,soldOut:!p.soldOut}:p), "Updated live ✓"); }
+function removeP(id){ const p=products.find(x=>x.id===id); if(confirm(`Delete "${p.name}" from the live site? This can't be undone.`)) mutate(ps=>ps.filter(x=>x.id!==id), "Deleted ✓"); }
+
+$("backupBtn").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(products,null,2)],{type:"application/json"}));
+  a.download = "products-backup.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+let orders=[],oFilter="all";
+const fmt=n=>"₹"+Number(n||0).toLocaleString("en-IN");
+function tab(t){["Products","Orders","Settings"].forEach(n=>{$("v"+n).classList.toggle("hide",n!==t);$("t"+n).classList.toggle("on",n===t)});$("addBtn").classList.toggle("hide",t!=="Products");if(t==="Orders")loadOrders()}
+async function loadOrders(){try{orders=await api("orders")}catch(e){toast("Couldn’t load orders");return}renderOrders()}
+function renderOrders(){
+  const live=orders.filter(o=>o.status!=="cancelled"),pend=orders.filter(o=>o.status==="pending");
+  $("tOrders").textContent="Orders"+(pend.length?" ("+pend.length+")":"");
+  $("oGot").textContent=fmt(live.reduce((a,o)=>a+(o.paidAmount||0),0));
+  $("oPend").textContent=fmt(pend.reduce((a,o)=>a+Math.max(o.total-(o.paidAmount||0),0),0));
+  $("oCount").textContent=orders.length;
+  const list=orders.filter(o=>oFilter==="all"||o.status===oFilter);
+  $("oList").innerHTML=list.length?list.map(o=>{
+    const d=String(o.phone).replace(/\D/g,""),wa=d.length===10?"91"+d:d,when=new Date(o.createdAt).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+    return `<div class="ord"><div class="top"><b>#${esc(o.id)} <span class="mute" style="font-weight:400">· ${esc(when)}</span></b><span><span class="chip">${o.method==="cod"?"COD":"UPI"}</span> <span class="chip ${o.status}">${o.status}</span></span></div>
+    <div style="margin-top:6px">${esc(o.name)} · <a href="tel:${esc(d)}">${esc(o.phone)}</a> · <a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a></div>
+    <div class="mute" style="font-size:14px">${esc(o.address)}${o.note?" · Note: "+esc(o.note):""}</div>
+    <div class="items">${o.items.map(i=>esc(i.name)+" ("+esc(i.size)+") × "+i.qty).join("<br>")}</div>
+    ${o.utr?`<div class="mute" style="font-size:13px">UPI Ref (UTR): <b style="color:var(--text)">${esc(o.utr)}</b></div>`:""}
+    <div><b>Total ${fmt(o.total)}</b> · Received ${fmt(o.paidAmount)}</div>
+    <div class="acts row">${o.status!=="paid"?`<button class="pri" onclick="markPaid('${o.id}')">Mark paid</button>`:`<button onclick="markPending('${o.id}')">Mark pending</button>`}<button onclick="editAmt('${o.id}')">Edit amount</button>${o.status!=="cancelled"?`<button onclick="cancelOrder('${o.id}')">Cancel</button>`:""}<button class="del" onclick="delOrder('${o.id}')">Delete</button></div></div>`}).join(""):'<div class="empty">No orders here yet.</div>';
+}
+async function saveOrder(id,patch){try{const n=await api("orders",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({id,...patch})});orders=orders.map(x=>x.id===id?n:x);renderOrders();toast("Updated ✓")}catch(e){toast("Couldn’t update: "+e.message)}}
+function markPaid(id){const o=orders.find(x=>x.id===id),v=prompt("Amount received in your UPI app (₹). Order total is "+o.total,o.total);if(v===null)return;const n=Number(v);if(!(n>=0))return toast("Enter a valid amount");saveOrder(id,{status:n>=o.total?"paid":"pending",paidAmount:n})}
+function markPending(id){saveOrder(id,{status:"pending",paidAmount:0})}
+function cancelOrder(id){if(confirm("Cancel this order?"))saveOrder(id,{status:"cancelled"})}
+function editAmt(id){const o=orders.find(x=>x.id===id),v=prompt("Amount received (₹)",o.paidAmount||0);if(v===null)return;const n=Number(v);if(!(n>=0))return toast("Enter a valid amount");saveOrder(id,{paidAmount:n,status:n>=o.total?"paid":"pending"})}
+async function delOrder(id){if(!confirm("Delete this order permanently?"))return;try{await api("orders?id="+encodeURIComponent(id),{method:"DELETE"});orders=orders.filter(x=>x.id!==id);renderOrders();toast("Deleted ✓")}catch(e){toast("Couldn’t delete")}}
+async function loadSettings(){try{const s=await api("settings");$("sCod").checked=!!s.codEnabled;$("sUpi").value=s.upiId;$("sName").value=s.upiName}catch(e){}}
+async function saveSettings(){try{await api("settings",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({codEnabled:$("sCod").checked,upiId:$("sUpi").value.trim(),upiName:$("sName").value.trim()})});toast("Saved. Live on site ✓")}catch(e){toast(e.message)}}
+</script>
+</body>
+</html>
